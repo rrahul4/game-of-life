@@ -1,0 +1,43 @@
+---
+- hosts: allservers
+  become: true
+  become_user: root
+  tasks:
+  - name: Install tomcat
+    apt: name=tomcat9 state=latest
+    when: ansible_distribution=="Ubuntu"
+  - name: Install tomcat
+    dnf: name=tomcat state=latest
+    when: ansible_distribution=="Fedora"
+  - name: Start tomcat
+    service: name=tomcat9 state=started
+    when: ansible_distribution=="Ubuntu"
+  - name: Start tomcat
+    service: name=tomcat state=started
+    when: ansible_distribution=="Fedora"
+  - name: Copybook War File
+    copy: 
+      src: /var/lib/jenkins/workspace/0.Jenkins_FullPipeLine/gameoflife-web/target/gameoflife.war 
+      dest: /var/lib/tomcat9/webapps/gameoflife.war
+      mode: 0755
+    when: ansible_distribution=="Ubuntu"
+      #- name: Change Default Tomcat Port to 8094
+      #replace:
+      #path: /var/lib/tomcat9/conf/server.xml
+      #regexp: '8080'
+      #replace: '8094'
+    notify:
+      - Restart tomcat9
+  - name: Copybook War File
+    copy: 
+      src: /var/lib/jenkins/workspace/0.Jenkins_FullPipeLine/gameoflife-web/target/gameoflife.war 
+      dest: /var/lib/tomcat/webapps/gameoflife.war  
+      mode: 0755   
+    when: ansible_distribution=="Fedora"     
+    notify:
+      - Restart tomcat
+  handlers:
+  - name: Restart tomcat9
+    service: name=tomcat9 state=restarted
+  - name: Restart tomcat
+    service: name=tomcat state=restarted
